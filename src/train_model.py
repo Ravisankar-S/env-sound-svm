@@ -57,7 +57,11 @@ def train_models(csv_path="data/processed/features.csv", models_dir="models"):
         json.dump(metrics, f, indent=4)
     print(f"\n📊 Saved metrics summary to {metrics_path}")
 
-    print("\n🎯 Best kernel (by accuracy):", max(metrics, key=lambda k: metrics[k]["accuracy"]))
+    best_kernel = max(
+        metrics,
+        key=lambda k: (metrics[k]["accuracy"], metrics[k]["f1_weighted"])
+    )
+    print("\n🎯 Best kernel (by accuracy → f1 fallback):", best_kernel)
     return metrics
 
 if __name__ == "__main__":

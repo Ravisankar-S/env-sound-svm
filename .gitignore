@@ -1,3 +1,10 @@
+# Data & models (avoid pushing heavy files)
+data/raw/
+data/processed/
+*.wav
+*.ogg
+model.pkl
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

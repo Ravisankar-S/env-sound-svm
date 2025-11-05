@@ -58,8 +58,6 @@ best_kernel = get_best_kernel("models")
 tab1, tab2 = st.tabs(["🎧 Classify Sound", "📊 General Info"])
 
 with tab1:
-    st.subheader("Upload a Sound File to Classify")
-
     # Try Sample Feature
     st.markdown("#### 🎵 Try a Sample Audio")
     col1, col2 = st.columns([3, 1])

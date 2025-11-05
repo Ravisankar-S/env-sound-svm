@@ -31,7 +31,7 @@ def display_metrics_table(df):
     df_display.index = pd.Index(range(1, len(df_display) + 1), name="S.No")
 
     numeric_cols = df_display.select_dtypes(include=["float", "int"]).columns.tolist()
-    st.subheader("Kernel Performance Summary")
+    st.subheader("Summary")
 
     if len(numeric_cols) > 0:
         st.dataframe(
@@ -43,4 +43,5 @@ def display_metrics_table(df):
     best_idx = df_display["accuracy"].idxmax()
     best_kernel = df_display.loc[best_idx, "kernel"]
     best_acc = df_display.loc[best_idx, "accuracy"]
-    st.success(f"🏆 **Best Kernel:** {best_kernel} ({best_acc:.3f} accuracy)")
+    best_f1 = df_display.loc[best_idx, "f1_weighted"]
+    st.success(f"🏆 **Best Kernel:** {best_kernel} ({best_acc:.3f} accuracy, {best_f1:.3f} F1 score)")

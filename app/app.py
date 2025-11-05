@@ -3,18 +3,22 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import streamlit as st
 from src.utils import load_metrics, display_metrics_table, load_model
-from src.predict_sound import predict_sound, get_best_kernel
+from src.predict_sound import predict_sound, get_best_kernel, adaptive_kernel_selection
 
 st.set_page_config(page_title="Environmental Sound Classifier", layout="wide")
 
 # ───────────────────────────────────────────────
-st.title("🌦️ Environmental Sound Classification using SVM Kernels")
+st.title("Environmental Sound Classification using SVM Kernels")
 st.markdown(
     """
     This app uses **Support Vector Machines (SVMs)** to classify environmental sounds 
     like *rain, dog bark, sea waves, fire crackling,* and more.
     It compares different kernel types (Linear, Polynomial, RBF, Sigmoid) and finds which works best for this dataset.
-    """
+
+    - 🎧 <a href="#" style="text-decoration:none; color:#0066cc; font-weight:500;"> **Classify Sound Tab:** </a>Upload audio samples and receive instant predictions with adaptive kernel selection.
+    - 📊 <a href="#" style="text-decoration:none; color:#0066cc; font-weight:500;"> **General Info Tab:** </a> Explore kernel performance metrics, understand adaptive selection, and learn SVM-Kernel concepts.
+    """,
+    unsafe_allow_html=True
 )
 
 st.markdown(
@@ -24,16 +28,16 @@ st.markdown(
             Sounds that can be classified:
         </div>
         <div style="display:flex; flex-wrap:wrap; gap:8px;">
-            <span style="background-color:rgba(255,255,255,0.2); color:#ffffff; padding:6px 12px; border-radius:16px; font-size:13px; font-weight:500;">🐕 Dog</span>
-            <span style="background-color:rgba(255,255,255,0.2); color:#ffffff; padding:6px 12px; border-radius:16px; font-size:13px; font-weight:500;">🌧️ Rain</span>
-            <span style="background-color:rgba(255,255,255,0.2); color:#ffffff; padding:6px 12px; border-radius:16px; font-size:13px; font-weight:500;">🌊 Sea waves</span>
-            <span style="background-color:rgba(255,255,255,0.2); color:#ffffff; padding:6px 12px; border-radius:16px; font-size:13px; font-weight:500;">👶 Crying baby</span>
-            <span style="background-color:rgba(255,255,255,0.2); color:#ffffff; padding:6px 12px; border-radius:16px; font-size:13px; font-weight:500;">🕐 Ticking clock</span>
-            <span style="background-color:rgba(255,255,255,0.2); color:#ffffff; padding:6px 12px; border-radius:16px; font-size:13px; font-weight:500;">🪚 Chainsaw</span>
-            <span style="background-color:rgba(255,255,255,0.2); color:#ffffff; padding:6px 12px; border-radius:16px; font-size:13px; font-weight:500;">🔥 Crackling fire</span>
-            <span style="background-color:rgba(255,255,255,0.2); color:#ffffff; padding:6px 12px; border-radius:16px; font-size:13px; font-weight:500;">🚁 Helicopter</span>
-            <span style="background-color:rgba(255,255,255,0.2); color:#ffffff; padding:6px 12px; border-radius:16px; font-size:13px; font-weight:500;">🐓 Rooster</span>
-            <span style="background-color:rgba(255,255,255,0.2); color:#ffffff; padding:6px 12px; border-radius:16px; font-size:13px; font-weight:500;">🤧 Sneezing</span>
+            <span style="background-color:rgba(255,255,255,0.2); color:#ffffff; padding:6px 12px; border-radius:16px; font-size:13px; font-weight:500;">Dog</span>
+            <span style="background-color:rgba(255,255,255,0.2); color:#ffffff; padding:6px 12px; border-radius:16px; font-size:13px; font-weight:500;">Rain</span>
+            <span style="background-color:rgba(255,255,255,0.2); color:#ffffff; padding:6px 12px; border-radius:16px; font-size:13px; font-weight:500;">Sea waves</span>
+            <span style="background-color:rgba(255,255,255,0.2); color:#ffffff; padding:6px 12px; border-radius:16px; font-size:13px; font-weight:500;">Crying baby</span>
+            <span style="background-color:rgba(255,255,255,0.2); color:#ffffff; padding:6px 12px; border-radius:16px; font-size:13px; font-weight:500;">Ticking clock</span>
+            <span style="background-color:rgba(255,255,255,0.2); color:#ffffff; padding:6px 12px; border-radius:16px; font-size:13px; font-weight:500;">Chainsaw</span>
+            <span style="background-color:rgba(255,255,255,0.2); color:#ffffff; padding:6px 12px; border-radius:16px; font-size:13px; font-weight:500;">Crackling fire</span>
+            <span style="background-color:rgba(255,255,255,0.2); color:#ffffff; padding:6px 12px; border-radius:16px; font-size:13px; font-weight:500;">Helicopter</span>
+            <span style="background-color:rgba(255,255,255,0.2); color:#ffffff; padding:6px 12px; border-radius:16px; font-size:13px; font-weight:500;">Rooster</span>
+            <span style="background-color:rgba(255,255,255,0.2); color:#ffffff; padding:6px 12px; border-radius:16px; font-size:13px; font-weight:500;">Sneezing</span>
         </div>
     </div>
     """,
@@ -56,7 +60,9 @@ tab1, tab2 = st.tabs(["🎧 Classify Sound", "📊 General Info"])
 with tab1:
     st.subheader("Upload a Sound File to Classify")
     st.caption(
-        "Upload a short environmental sound clip (.wav/.ogg/.mp3). The system will automatically use the best-performing kernel for prediction."
+        "Upload a short environmental sound clip (.wav/.ogg/.mp3). The system uses **Guarded Adaptive Kernel Selection** "
+        "to intelligently choose the best kernel for each sample, switching from the global best (RBF) when another kernel "
+        "shows significantly higher confidence (≥0.1 margin)."
     )
 
     uploaded = st.file_uploader("Choose a sound file", type=["wav", "ogg", "mp3"], key="sound_uploader")
@@ -68,12 +74,16 @@ with tab1:
 
         st.markdown("### 🧾 **RESULT:**")
 
-        with st.spinner("🔍 Analyzing audio and predicting..."):
+        with st.spinner("🔍 Analyzing audio with adaptive kernel selection..."):
             try:
-                label, conf = predict_sound("temp_audio.wav", kernel=best_kernel)
+                chosen_kernel, label, conf, all_results, decision_info = adaptive_kernel_selection(
+                    "temp_audio.wav", 
+                    models_dir="models", 
+                    confidence_threshold=0.1
+                )
                 conf_str = f"{conf:.3f}" if conf else "N/A"
             except Exception as e:
-                st.error(f"Error predicting with {best_kernel}: {e}")
+                st.error(f"Error during adaptive prediction: {e}")
                 st.stop()
 
         st.markdown(
@@ -92,13 +102,25 @@ with tab1:
             unsafe_allow_html=True,
         )
 
+        if decision_info["switched"]:
+            kernel_color = "#28a745"
+            icon = "🔄"
+        else:
+            kernel_color = "#0d47a1"
+            icon = "✓"
+        
         st.markdown(
             f"""
             <div style="margin-top:12px; padding:10px; border-radius:8px; background-color:#e8f3ff; color:#000000;">
-                <b>Best Kernel (based on metrics):</b>
-                <span style="font-family: 'Georgia', serif; color:#0d47a1; font-weight:700; font-size:20px; margin-left:6px;">
-                    {best_kernel.upper()}
-                </span>
+                <div style="margin-bottom:6px;">
+                    <b>Selected Kernel (Adaptive):</b>
+                    <span style="font-family: 'Georgia', serif; color:{kernel_color}; font-weight:700; font-size:20px; margin-left:6px;">
+                        {icon} {chosen_kernel.upper()}
+                    </span>
+                </div>
+                <div style="font-size:13px; color:#555; margin-top:4px;">
+                    {decision_info["reason"]}
+                </div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -107,29 +129,68 @@ with tab1:
         st.markdown("---")
 
         st.write("### 🔬 Kernel Comparison on This File")
-        results = []
-        for k in df_metrics["kernel"]:
-            try:
-                pred, conf = predict_sound("temp_audio.wav", kernel=k)
-                conf_str = f"{conf:.3f}" if conf else "N/A"
-                results.append({"Kernel": k.upper(), "Predicted": pred, "Confidence": conf_str})
-            except Exception as e:
-                results.append({"Kernel": k.upper(), "Predicted": f"Error: {e}", "Confidence": "—"})
-
+        
         import pandas as pd
-        results_df = pd.DataFrame(results)
+        results_data = []
+        for r in all_results:
+            conf_val = r["confidence"]
+            conf_display = f"{conf_val:.3f}" if isinstance(conf_val, (int, float)) else "N/A"
+            
+            kernel_name = r["kernel"].upper()
+            if r["kernel"] == chosen_kernel:
+                kernel_name += " ⭐"
+            
+            results_data.append({
+                "Kernel": kernel_name,
+                "Predicted": r["label"],
+                "Confidence": conf_display
+            })
+        
+        results_df = pd.DataFrame(results_data)
         if not results_df.empty:
             results_df.index = pd.Index(range(1, len(results_df) + 1), name="S.No")
         st.table(results_df)
+        
+        st.markdown(
+            f"""
+            <div style="padding:12px; background-color:#d1ecf1; border-left:4px solid #0c5460; border-radius:4px;">
+                <span style="color:#0c5460;">
+                    ℹ️ <b>Adaptive Selection Info:</b> Global best kernel is <b>{decision_info['global_best_kernel'].upper()}</b> 
+                    (confidence: {decision_info['global_best_confidence']:.3f}). 
+                    Highest confidence kernel is <b>{decision_info['max_confidence_kernel'].upper()}</b> 
+                    (confidence: {decision_info['max_confidence']:.3f}). 
+                    Confidence difference: <b>{decision_info['confidence_diff']:.3f}</b>. 
+                    Threshold for switching: <b>{decision_info['threshold']}</b>.
+                </span>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+        
+        st.markdown(
+            """
+            <div style="margin-top:8px; font-size:14px;">
+                💡 <a href="#guarded-adaptive-kernel-selection" style="text-decoration:none; color:#0066cc; font-weight:500;">
+                Know more about Adaptive Kernel Selection →
+                </a>
+                <span style="color:#666; font-size:12px;">(See General Info tab)</span>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
     else:
         st.info("📂 Upload a sound file to start classification.")
 
 with tab2:
-    st.subheader("📊 Kernel Performance Summary")
+    st.subheader("📊 Kernel Performance Snapshot")
     st.caption(
-        "Each kernel represents a different way of drawing decision boundaries in feature space. "
-        "Higher accuracy and F1 scores indicate better generalization on unseen sounds."
+        """
+         - This model is trained on a 10-class subset called ESC-10 of the  <a href='https://github.com/karolpiczak/ESC-50' target='_blank' style='text-decoration:none;'>**karolpiczak/ESC-50**</a> dataset. 
+         - Each kernel represents a different way of drawing decision boundaries in feature space. 
+         - Higher accuracy and F1 scores indicate better generalization on unseen sounds. 
+        """,
+        unsafe_allow_html=True
     )
     st.markdown("<br>", unsafe_allow_html=True)
     display_metrics_table(df_metrics)
@@ -137,7 +198,7 @@ with tab2:
     st.markdown("---")
     st.subheader("💡 Understanding the Results")
     
-    st.markdown("#### 🧠 Why RBF?")
+    st.markdown("#### Why RBF?")
     st.markdown(
         """
         - The **RBF (Radial Basis Function)** kernel is the default choice for SVMs because it's a powerful non-linear tool, perfect for complex audio data.
@@ -147,7 +208,7 @@ with tab2:
         """
     )
     
-    st.markdown("#### 😮 The Surprising Strength of 'Linear'")
+    st.markdown("#### The Surprising Strength of 'Linear'")
     st.markdown(
         """
         - The **linear kernel** performed surprisingly well (72.5% accuracy), which is a key finding that validates our feature extraction.
@@ -156,12 +217,35 @@ with tab2:
         """
     )
     
-    st.markdown("#### 📉 What About the Other Kernels?")
+    st.markdown("#### What About the Other Kernels?")
     st.markdown(
         """
         - The **Sigmoid kernel's** strong performance confirmed that a non-linear approach is correct for this data.
         - However, the **Poly kernel** was the clear loser, proving that just being non-linear isn't enough.
         - Its specific polynomial shape was the wrong fit for our sound features, demonstrating it was too rigid and less flexible than RBF for this specific task.
+        """
+    )
+    
+    st.markdown("---")
+    st.markdown('<div id="guarded-adaptive-kernel-selection"></div>', unsafe_allow_html=True)
+    st.subheader("🔄 Guarded Adaptive Kernel Selection")
+    st.markdown("#### How It Works")
+    st.markdown(
+        """
+        - **Step 1:** Predict with all kernels and compute confidence scores for each.
+        - **Step 2:** Identify the kernel with the highest confidence for this specific sample.
+        - **Step 3:** Compare against the global best kernel (RBF) confidence.
+        - **Step 4:** If confidence difference ≥ 0.1, switch to the higher-confidence kernel; otherwise, retain RBF.
+        """
+    )
+    
+    st.markdown("#### Why Adaptive Selection?")
+    st.markdown(
+        """
+        - **Local Adaptability:** Different kernels may perform better on specific sound samples due to their unique characteristics.
+        - **Sample-Specific Optimization:** While RBF is globally optimal, individual samples may benefit from other kernels.
+        - **Confidence-Guided:** Only switches when there's a significant confidence advantage (≥10% improvement).
+        - **Guarded Approach:** Prevents unnecessary switching for marginal gains, maintaining stability.
         """
     )
 

@@ -201,7 +201,7 @@ with tab1:
         st.markdown(
             """
             <div style="margin-top:8px; font-size:14px;">
-                💡 <a href="https://built-by-ravi.streamlit.app/#guarded-adaptive-kernel-selection" style="text-decoration:none; color:#0066cc; font-weight:500;">
+                💡 <a href="#" style="text-decoration:none; color:#0066cc; font-weight:500;">
                 Know more about Adaptive Kernel Selection →
                 </a>
                 <span style="color:#666; font-size:12px;">(See General Info tab)</span>
@@ -214,7 +214,32 @@ with tab1:
         st.info("📂 Upload a sound file to start classification.")
 
 with tab2:
-    st.subheader("📊 Kernel Performance Snapshot")
+    # Heading with GitHub button on the right
+    st.markdown(
+        """
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 style="margin: 0;">📊 Kernel Performance Snapshot</h3>
+            <a href="https://github.com/Ravisankar-S/env-sound-svm/" target="_blank" style="text-decoration: none;">
+                <button style="
+                    background: linear-gradient(135deg, #24292e 0%, #40454b 100%);
+                    color: white;
+                    padding: 10px 24px;
+                    font-size: 14px;
+                    font-weight: 600;
+                    border: none;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                    transition: all 0.3s ease;
+                ">
+                    <span style="margin-right: 8px;">⭐</span> View on GitHub
+                </button>
+            </a>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+    
     st.caption(
         """
          - This model is trained on a 10-class subset called ESC-10 of the  <a href='https://github.com/karolpiczak/ESC-50' target='_blank' style='text-decoration:none;'>**karolpiczak/ESC-50**</a> dataset. 

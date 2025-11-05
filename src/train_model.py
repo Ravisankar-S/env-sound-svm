@@ -8,6 +8,7 @@ from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score, f1_score, classification_report, confusion_matrix
 
 def load_data(csv_path="data/processed/features.csv"):
+    """Load feature CSV and split into X, y."""
     df = pd.read_csv(csv_path)
     X = df.drop("label", axis=1).values
     y = df["label"].values
@@ -39,8 +40,8 @@ def train_models(csv_path="data/processed/features.csv", models_dir="models"):
     metrics = {}
 
     for kernel, grid in param_grids.items():
-        print(f"\n🔹 Tuning and training SVM with {kernel} kernel...")
-        svc = SVC()
+        print(f"\n🔹 Tuning and training SVM with {kernel} kernel (probability=True)...")
+        svc = SVC(probability=True)
         grid_search = GridSearchCV(
             estimator=svc,
             param_grid=grid,
@@ -73,16 +74,16 @@ def train_models(csv_path="data/processed/features.csv", models_dir="models"):
         bundle = {"model": best_model, "scaler": scaler, "label_encoder": le}
         out_path = os.path.join(models_dir, f"svm_{kernel}.pkl")
         joblib.dump(bundle, out_path)
-        print(f"✅ Saved model: {out_path}")
+        print(f" Saved model: {out_path}")
 
     metrics_path = os.path.join(models_dir, "metrics.json")
     with open(metrics_path, "w") as f:
         json.dump(metrics, f, indent=4)
-    print(f"\n📊 Saved metrics summary to {metrics_path}")
+    print(f"\n Saved metrics summary to {metrics_path}")
 
     best_kernel = max(metrics, key=lambda k: (metrics[k]["accuracy"], metrics[k]["f1_weighted"]))
-    print("\n🎯 Best kernel (by accuracy → f1 fallback):", best_kernel)
-    print("🏆 Best params:", metrics[best_kernel]["best_params"])
+    print("\n Best kernel (by accuracy → f1 fallback):", best_kernel)
+    print(" Best params:", metrics[best_kernel]["best_params"])
 
     return metrics
 

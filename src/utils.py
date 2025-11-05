@@ -20,10 +20,27 @@ def load_metrics(models_dir: str = "models") -> pd.DataFrame:
     df = pd.DataFrame(data).T.reset_index().rename(columns={"index": "kernel"})
     return df
 
-def display_metrics_table(df: pd.DataFrame):
-    best_idx = df["accuracy"].idxmax()
+def display_metrics_table(df):
+    df_display = df.copy()
+    
+    if "best_params" in df_display.columns:
+        df_display["best_params"] = df_display["best_params"].apply(
+            lambda x: ", ".join([f"{k}={v}" for k, v in x.items()]) if isinstance(x, dict) else str(x)
+        )
+    
+    df_display.index = pd.Index(range(1, len(df_display) + 1), name="S.No")
+
+    numeric_cols = df_display.select_dtypes(include=["float", "int"]).columns.tolist()
     st.subheader("Kernel Performance Summary")
-    st.dataframe(df.style.highlight_max(axis=0, color="#d0f0c0"))
-    best_kernel = df.loc[best_idx, "kernel"]
-    best_acc = df.loc[best_idx, "accuracy"]
+
+    if len(numeric_cols) > 0:
+        st.dataframe(
+            df_display.style.highlight_max(subset=numeric_cols, axis=0, color="#d0f0c0")
+        )
+    else:
+        st.dataframe(df_display)
+
+    best_idx = df_display["accuracy"].idxmax()
+    best_kernel = df_display.loc[best_idx, "kernel"]
+    best_acc = df_display.loc[best_idx, "accuracy"]
     st.success(f"🏆 **Best Kernel:** {best_kernel} ({best_acc:.3f} accuracy)")

@@ -201,7 +201,7 @@ with tab1:
         st.markdown(
             """
             <div style="margin-top:8px; font-size:14px;">
-                💡 <a href="#guarded-adaptive-kernel-selection" style="text-decoration:none; color:#0066cc; font-weight:500;">
+                💡 <a href="https://built-by-ravi.streamlit.app/#guarded-adaptive-kernel-selection" style="text-decoration:none; color:#0066cc; font-weight:500;">
                 Know more about Adaptive Kernel Selection →
                 </a>
                 <span style="color:#666; font-size:12px;">(See General Info tab)</span>
@@ -220,6 +220,7 @@ with tab2:
          - This model is trained on a 10-class subset called ESC-10 of the  <a href='https://github.com/karolpiczak/ESC-50' target='_blank' style='text-decoration:none;'>**karolpiczak/ESC-50**</a> dataset. 
          - Each kernel represents a different way of drawing decision boundaries in feature space. 
          - Higher accuracy and F1 scores indicate better generalization on unseen sounds. 
+         - For detailed understanding, refer to the <a href='https://github.com/Ravisankar-S/env-sound-svm/blob/main/notebooks/svm_training.ipynb' target='_blank' style='text-decoration:none;'>**svm_training.ipynb**</a> file for graphs and analysis.
         """,
         unsafe_allow_html=True
     )

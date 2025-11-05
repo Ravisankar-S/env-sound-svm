@@ -59,11 +59,6 @@ tab1, tab2 = st.tabs(["🎧 Classify Sound", "📊 General Info"])
 
 with tab1:
     st.subheader("Upload a Sound File to Classify")
-    st.caption(
-        "Upload a short environmental sound clip (.wav/.ogg/.mp3). The system uses **Guarded Adaptive Kernel Selection** "
-        "to intelligently choose the best kernel for each sample, switching from the global best (RBF) when another kernel "
-        "shows significantly higher confidence (≥0.1 margin)."
-    )
 
     # Try Sample Feature
     st.markdown("#### 🎵 Try a Sample Audio")
@@ -72,9 +67,7 @@ with tab1:
     sample_files = {
         "-- Select a sample --": None,
         "🐕 Dog": "data/testing_samples/dog.wav",
-        "🌧️ Rain": "data/testing_samples/rain.wav",
         "🌊 Sea Waves": "data/testing_samples/sea_waves.wav",
-        "👶 Crying Baby": "data/testing_samples/crying_baby.wav",
         "⏰ Clock Tick": "data/testing_samples/clock_tick.wav",
         "🪚 Chainsaw": "data/testing_samples/chainsaw.wav",
         "🔥 Crackling Fire": "data/testing_samples/crackling_fire.wav",

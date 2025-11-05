@@ -65,19 +65,59 @@ with tab1:
         "shows significantly higher confidence (≥0.1 margin)."
     )
 
+    # Try Sample Feature
+    st.markdown("#### 🎵 Try a Sample Audio")
+    col1, col2 = st.columns([3, 1])
+    
+    sample_files = {
+        "-- Select a sample --": None,
+        "🐕 Dog": "data/testing_samples/dog.wav",
+        "🌧️ Rain": "data/testing_samples/rain.wav",
+        "🌊 Sea Waves": "data/testing_samples/sea_waves.wav",
+        "👶 Crying Baby": "data/testing_samples/crying_baby.wav",
+        "⏰ Clock Tick": "data/testing_samples/clock_tick.wav",
+        "🪚 Chainsaw": "data/testing_samples/chainsaw.wav",
+        "🔥 Crackling Fire": "data/testing_samples/crackling_fire.wav",
+        "🚁 Helicopter": "data/testing_samples/helicopter.wav",
+        "🐓 Rooster": "data/testing_samples/rooster.wav",
+        "🤧 Sneezing": "data/testing_samples/sneezing.wav"
+    }
+    
+    with col1:
+        selected_sample = st.selectbox(
+            "Choose a pre-loaded sample to test the model:",
+            options=list(sample_files.keys()),
+            key="sample_selector"
+        )
+    
+    st.markdown("#### 📤 Or Upload Your Own Audio")
     uploaded = st.file_uploader("Choose a sound file", type=["wav", "ogg", "mp3"], key="sound_uploader")
 
-    if uploaded:
+    # Determine which audio source to use
+    audio_file = None
+    audio_source = None
+    
+    if selected_sample and selected_sample != "-- Select a sample --":
+        audio_file = sample_files[selected_sample]
+        audio_source = "sample"
+    elif uploaded:
         with open("temp_audio.wav", "wb") as f:
             f.write(uploaded.read())
-        st.audio("temp_audio.wav")
+        audio_file = "temp_audio.wav"
+        audio_source = "uploaded"
+
+    if audio_file:
+        st.audio(audio_file)
+        
+        if audio_source == "sample":
+            st.info(f"🎵 **Using sample:** {selected_sample}")
 
         st.markdown("### 🧾 **RESULT:**")
 
         with st.spinner("🔍 Analyzing audio with adaptive kernel selection..."):
             try:
                 chosen_kernel, label, conf, all_results, decision_info = adaptive_kernel_selection(
-                    "temp_audio.wav", 
+                    audio_file, 
                     models_dir="models", 
                     confidence_threshold=0.1
                 )
